@@ -1,6 +1,6 @@
 
 // backend ka base URL set kar rahe hain  (local dev ke liye)
-const API_BASE = "http://todofxn-c6bwayfsdxagbhcj.centralindia-01.azurewebsites.net/api";  // yahan se sare endpoints hit honge
+const API_BASE = "https://todofxn-c6bwayfsdxagbhcj.centralindia-01.azurewebsites.net/api";  // yahan se sare endpoints hit honge
 
 export const getTasks = () => 
   fetch(`${API_BASE}/gettask`)  // backend se GET call
