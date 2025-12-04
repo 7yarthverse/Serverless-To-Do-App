@@ -27,16 +27,22 @@ jobs:
           cd ${{ env.AZURE_FUNCTIONAPP_PACKAGE_PATH }}
           npm install
 
-      - name: Upload artifact
+      - name: Prepare backend build                      # 📦 Storage folder create
+        run: |
+          mkdir packaged                                 # 🆕 package folder banao
+          cp backend/host.json packaged/                 # host.json copy → required by Azure
+          cp backend/package.json packaged/              # package.json copy
+          cp -r backend/src packaged/src                 # src folder copy (functions code)
+
+      - name: Upload artifact                           # 👇 only correct structure upload
         uses: actions/upload-artifact@v4
         with:
           name: backend-app
-          path: ./backend/*       # ✔ ONLY CONTENTS uploaded
+          path: packaged
 
   deploy:
     runs-on: windows-latest
     needs: build
-
     steps:
       - name: Download artifact
         uses: actions/download-artifact@v4
@@ -48,8 +54,7 @@ jobs:
         with:
           app-name: 'todofxn'
           slot-name: 'Production'
-          package: '.'           # deploy extracted contents
+          package: '.'                                    # Deploy root extracted dir
           publish-profile: ${{ secrets.AZUREAPPSERVICE_PUBLISHPROFILE_DC4222E86C2741F885E653464709A54C }}
-          enable-oryx-build: true            
-          scm-do-build-during-deployment: true    
-
+          enable-oryx-build: true                         # Build enable
+          scm-do-build-during-deployment: true            # Deploy-time build enable
