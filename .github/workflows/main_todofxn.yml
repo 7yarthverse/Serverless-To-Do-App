@@ -49,5 +49,6 @@ jobs:
         with:
           app-name: 'todofxn'
           slot-name: 'Production'
-          package: './'                                  # deploy downloaded artifact
+          package: './backend'                                  # deploy downloaded artifact
           publish-profile: ${{ secrets.AZUREAPPSERVICE_PUBLISHPROFILE_DC4222E86C2741F885E653464709A54C }}
+
