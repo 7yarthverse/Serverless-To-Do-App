@@ -49,7 +49,8 @@ jobs:
         with:
           app-name: 'todofxn'
           slot-name: 'Production'
-          package: 'packaged'
+          package: '.'
           publish-profile: ${{ secrets.AZUREAPPSERVICE_PUBLISHPROFILE_DC4222E86C2741F885E653464709A54C }}
           enable-oryx-build: true
           scm-do-build-during-deployment: true
+
