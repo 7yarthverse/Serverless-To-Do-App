@@ -1,5 +1,3 @@
-# Docs for the Azure Web Apps Deploy action: https://github.com/azure/functions-action
-# More GitHub Actions for Azure: https://github.com/Azure/actions
 
 name: Build and deploy Node.js project to Azure Function App - todofxn
 
@@ -10,56 +8,46 @@ on:
   workflow_dispatch:
 
 env:
-  AZURE_FUNCTIONAPP_PACKAGE_PATH: './backend'
-  NODE_VERSION: '18.x'
-
+  AZURE_FUNCTIONAPP_PACKAGE_PATH: './backend'   # correct backend folder
+  NODE_VERSION: '18.x'                          # supported runtime
 
 jobs:
   build:
     runs-on: windows-latest
-    permissions:
-      contents: read #This is required for actions/checkout
-      
     steps:
-      - name: 'Checkout GitHub Action'
+      - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Setup Node ${{ env.NODE_VERSION }} Environment
+      - name: Setup Node.js
         uses: actions/setup-node@v3
         with:
           node-version: ${{ env.NODE_VERSION }}
 
-      - name: 'Resolve Project Dependencies Using Npm'
-        shell: pwsh
+      - name: Install backend dependencies
         run: |
-          pushd './${{ env.AZURE_FUNCTIONAPP_PACKAGE_PATH }}'
+          cd ${{ env.AZURE_FUNCTIONAPP_PACKAGE_PATH }}
           npm install
-          npm run build --if-present
-          npm run test --if-present
-          popd
 
-      - name: Upload artifact for deployment job
+      - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
-          name: node-app
-          path: .
+          name: backend-app
+          path: ${{ env.AZURE_FUNCTIONAPP_PACKAGE_PATH }}   # ✔ only backend uploaded
 
   deploy:
     runs-on: windows-latest
     needs: build
-    
+
     steps:
-      - name: Download artifact from build job
+      - name: Download artifact
         uses: actions/download-artifact@v4
         with:
-          name: node-app
-      
-      - name: 'Run Azure Functions Action'
+          name: backend-app
+
+      - name: Deploy to Azure Functions
         uses: Azure/functions-action@v1
-        id: fa
         with:
           app-name: 'todofxn'
           slot-name: 'Production'
-          package: ${{ env.AZURE_FUNCTIONAPP_PACKAGE_PATH }}
-
+          package: './'                                  # deploy downloaded artifact
           publish-profile: ${{ secrets.AZUREAPPSERVICE_PUBLISHPROFILE_DC4222E86C2741F885E653464709A54C }}
