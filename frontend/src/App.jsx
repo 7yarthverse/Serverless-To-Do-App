@@ -131,7 +131,7 @@
 // }
 
 // export default App;
-
+////////////////////////////////////////////////////////////////////////////
 //  import { useEffect, useState } from "react";
 // import { addTask, deleteTask, getTasks, patchTask, updateTask } from "./api";
 
@@ -220,29 +220,26 @@
 //     </div>
 //   );
 // }
-import { useEffect, useState } from "react";
+
+//enterprise ui design
+// 🚀 Enterprise Grade UI (React-Only)
+
+import { useCallback, useEffect, useState } from "react";
 import { addTask, deleteTask, getTasks, patchTask, updateTask } from "./api";
 
 export default function Todo() {
   const [tasks, setTasks] = useState([]);
   const [title, setTitle] = useState("");
   const [editValues, setEditValues] = useState({});
-  const [loading, setLoading] = useState(true);  // loading ui
 
-  const load = () => {
-    setLoading(true);
-    getTasks().then((res) => {
-      setTasks(res);
-      setLoading(false);
-    });
-  };
+  const load = useCallback(() => {
+    getTasks().then(setTasks);
+  }, []);
 
   useEffect(() => {
-  const fetchData = async () => {
-    await load();   // indirectly setState call allowed safely
-  };
-  fetchData();
-}, []);
+    const run = async () => { await load(); };
+    run();
+  }, [load]);
 
   const handleAdd = () => {
     if (!title.trim()) return;
@@ -252,186 +249,184 @@ export default function Todo() {
     });
   };
 
-  const handleUpdate = (id, title) =>
-    updateTask(id, title, "done").then(load);
-
-  const handlePatch = (id, newTitle, newStatus) =>
-    patchTask(id, newTitle, newStatus).then(() => {
-      setEditValues({});
-      load();
-    });
-
-  const handleDelete = (id) => deleteTask(id).then(load);
-
   return (
-    <div className="appContainer">
-      <h1 className="appTitle">🚀To do For You</h1>
+    <div className="container">
+      <h1 className="heading">Task Manager</h1>
 
-      <div className="inputBar">
+      <div className="inputRow">
         <input
           value={title}
           onChange={(e) => setTitle(e.target.value)}
-          placeholder="Add new task..."
+          placeholder="Create new task..."
         />
-        <button className="addBtn" onClick={handleAdd}>Add</button>
+        <button className="btn btnPrimary" onClick={handleAdd}>Add</button>
       </div>
 
-      {loading ? (
-        <p className="loading">Loading Tasks...</p>
-      ) : tasks.length === 0 ? (
-        <p className="empty">No tasks yet. Add your first!</p>
-      ) : (
-        <ul className="taskList">
-          {tasks.map((t) => (
-            <li key={t.rowKey} className="taskCard">
-              <div className="topRow">
-                <span className={`taskTitle ${t.status === "done" ? "completed" : ""}`}>
-                  {t.title}
-                </span>
-                <span className="status">{t.status}</span>
-              </div>
+      <ul className="taskList">
+        {tasks.map((t) => (
+          <li key={t.rowKey} className="card">
+            <div className="rowTop">
+              <span className={`title ${t.status === "done" ? "done" : ""}`}>
+                {t.title}
+              </span>
+              <span className="status">{t.status}</span>
+            </div>
 
-              <div className="actionRow">
-                <button className="btn done" onClick={() => handleUpdate(t.rowKey, t.title)}>Done</button>
-                <button className="btn delete" onClick={() => handleDelete(t.rowKey)}>Del</button>
+            <div className="rowActions">
+              <button className="btn btnSuccess"
+                onClick={() => updateTask(t.rowKey, t.title, "done").then(load)}>
+                Complete
+              </button>
 
-                <input
-                  className="renameInput"
-                  placeholder="Rename"
-                  value={editValues[t.rowKey] || ""}
-                  onChange={(e) =>
-                    setEditValues({ ...editValues, [t.rowKey]: e.target.value })
-                  }
-                />
+              <button className="btn btnDanger"
+                onClick={() => deleteTask(t.rowKey).then(load)}>
+                Delete
+              </button>
 
-                <button className="btn save" onClick={() => handlePatch(t.rowKey, editValues[t.rowKey], null)}>
-                  Save
-                </button>
+              <input
+                className="rename"
+                placeholder="Rename"
+                value={editValues[t.rowKey] || ""}
+                onChange={(e) =>
+                  setEditValues({ ...editValues, [t.rowKey]: e.target.value })
+                }
+              />
 
-                <button className="btn toggle"
-                  onClick={() =>
-                    handlePatch(
-                      t.rowKey,
-                      null,
-                      t.status === "pending" ? "done" : "pending"
-                    )}>
-                  Toggle
-                </button>
-              </div>
-            </li>
-          ))}
-        </ul>
-      )}
+              <button className="btn btnInfo"
+                onClick={() =>
+                  patchTask(t.rowKey, editValues[t.rowKey], null).then(() => {
+                    setEditValues({});
+                    load();
+                  })
+                }>
+                Save
+              </button>
 
-      {/* React scoped UI styling */}
+              <button className="btn btnWarning"
+                onClick={() =>
+                  patchTask(
+                    t.rowKey,
+                    null,
+                    t.status === "pending" ? "done" : "pending"
+                  ).then(load)
+                }>
+                Toggle
+              </button>
+            </div>
+          </li>
+        ))}
+      </ul>
+
       <style>{`
-      .appContainer {
-        max-width: 480px;
+      .container {
+        max-width: 550px;
         margin: auto;
         padding: 18px;
-        font-family: Poppins, sans-serif;
-      }
-      .appTitle {
-        text-align: center;
-        font-size: 30px;
-        margin-bottom: 15px;
-        font-weight: 700;
-        background: linear-gradient(90deg,#ff4d4d,#ff9f1a);
-        -webkit-background-clip: text;
-        color: transparent;
-      }
-      .inputBar {
-        display: flex;
-        gap: 10px;
-        margin-bottom: 15px;
-      }
-      input {
-        flex: 1;
-        padding: 12px;
-        border-radius: 10px;
-        border: 2px solid #333;
-        background: #111;
-        color: #fff;
-        font-size: 16px;
-      }
-      .addBtn {
-        padding: 12px 18px;
-        border-radius: 10px;
-        background: #ff9f1a;
-        color: #000;
-        font-weight: 600;
-        border: none;
-        cursor: pointer;
-      }
-      .taskList {
-        display: flex;
-        flex-direction: column;
-        gap: 12px;
-      }
-      .taskCard {
-        padding: 14px;
-        background: #171717;
-        border-radius: 14px;
-        border: 1px solid #262626;
-        box-shadow: 0 0 10px rgba(255,159,26,0.3);
-        display: flex;
-        flex-direction: column;
-        gap: 10px;
-        animation: fadeIn 0.3s ease;
-        min-height: 80px;
-      }
-      @keyframes fadeIn { from {opacity:0; transform:translateY(6px);} to {opacity:1;} }
-
-      .topRow {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-      }
-      .taskTitle { font-size: 18px; font-weight: 600; color: #fff; }
-      .completed { text-decoration: line-through; color:#41ff41; }
-      .status {
-        padding: 4px 12px;
-        font-size: 12px;
-        border-radius: 8px;
-        background: #333;
-        color: #ff9f1a;
-      }
-      .actionRow {
-        display: flex;
-        gap: 8px;
-        flex-wrap: wrap;
-      }
-      .btn {
-        padding: 6px 10px;
-        font-size: 12px;
-        border-radius: 8px;
-        border: none;
-        cursor: pointer;
-      }
-      .done { background:#41ff41; }
-      .delete { background:#ff4d4d; }
-      .save { background:#1e90ff; }
-      .toggle { background:#ff9f1a; }
-      .renameInput {
-        flex: 1;
-        background: #222;
-        border-radius: 8px;
-        border:1px solid #555;
+        font-family: 'Inter', sans-serif;
+        background:#0f0f10;
         color:white;
-        padding:6px 8px;
       }
-      .loading, .empty {
+
+      .heading {
         text-align:center;
-        color:#ff9f1a;
-        font-size:16px;
-        margin-top:20px;
+        font-size:32px;
+        font-weight:700;
+        color:#e2e8f0;
+        margin-bottom:20px;
+      }
+
+      .inputRow {
+        display:flex;
+        gap:12px;
+        margin-bottom:18px;
+      }
+
+      input {
+        flex:1;
+        padding: 12px;
+        border-radius:10px;
+        background:#1b1b1b;
+        color:white;
+        border:1px solid #2f2f2f;
+        font-size:15px;
+      }
+
+      .taskList {
+        display:flex;
+        flex-direction:column;
+        gap:12px;
+      }
+
+      .card {
+        background:#161616;
+        padding:14px 16px;
+        border-radius:14px;
+        border:1px solid #2b2b2b;
+        display:flex;
+        flex-direction:column;
+        gap:10px;
+      }
+
+      .rowTop {
+        display:flex;
+        justify-content:space-between;
+        align-items:center;
+      }
+
+      .title {
+        font-size:18px;
+        font-weight:600;
+        color:#e5e5e5;
+      }
+
+      .title.done {
+        color:#4ade80;
+        text-decoration:line-through;
+      }
+
+      .status {
+        padding:4px 12px;
+        border-radius:8px;
+        background:#1e293b;
+        color:#38bdf8;
+        font-size:13px;
+      }
+
+      .rowActions {
+        display:flex;
+        gap:8px;
+        flex-wrap:wrap;
+      }
+
+      .btn {
+        padding:7px 12px;
+        border:none;
+        border-radius:8px;
+        font-size:13px;
+        cursor:pointer;
+        font-weight:600;
+        color:white;
+      }
+
+      .btnPrimary { background:#2563eb; }
+      .btnSuccess { background:#16a34a; }
+      .btnDanger { background:#dc2626; }
+      .btnWarning { background:#d97706; }
+      .btnInfo { background:#0ea5e9; }
+
+      .rename {
+        flex:1;
+        padding:7px;
+        border-radius:8px;
+        background:#111;
+        color:white;
+        border:1px solid #444;
       }
 
       @media(max-width: 480px){
-        .topRow { flex-direction: column; align-items: flex-start; gap:4px; }
+        .rowTop{flex-direction:column;align-items:flex-start;gap:6px;}
       }
       `}</style>
     </div>
   );
 }
-
