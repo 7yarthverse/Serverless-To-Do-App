@@ -24,3 +24,12 @@ React Frontend (Presentation Layer)
 Azure Functions (Application Layer)
       ↓ CRUD Operations
 Azure Table Storage (Data Layer)
+
+
+| Layer        | Technology                     |
+| ------------ | ------------------------------ |
+| Frontend     | React + Vite                   |
+| Backend      | Azure Functions (Node.js)      |
+| Database     | Azure Table Storage            |
+| Deployment   | GitHub Actions + Azure         |
+| Architecture | Serverless 3-Tier Architecture |
