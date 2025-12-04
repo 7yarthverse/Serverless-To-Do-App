@@ -2,39 +2,36 @@ name: Build and deploy Node.js project to Azure Function App - todofxn
 
 on:
   push:
-    branches:
-      - main
+    branches: [ main ]
   workflow_dispatch:
 
 env:
-  AZURE_FUNCTIONAPP_PACKAGE_PATH: './backend'
   NODE_VERSION: '18.x'
 
 jobs:
   build:
     runs-on: windows-latest
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
-      - name: Setup Node.js
-        uses: actions/setup-node@v3
+      - uses: actions/setup-node@v3
         with:
           node-version: ${{ env.NODE_VERSION }}
 
       - name: Install backend dependencies
         run: |
-          cd ${{ env.AZURE_FUNCTIONAPP_PACKAGE_PATH }}
+          cd backend
           npm install
 
-      - name: Prepare backend build                      # 📦 Storage folder create
+      - name: Prepare correct function package
         run: |
-          mkdir packaged                                 # 🆕 package folder banao
-          cp backend/host.json packaged/                 # host.json copy → required by Azure
-          cp backend/package.json packaged/              # package.json copy
-          cp -r backend/src packaged/src                 # src folder copy (functions code)
+          mkdir packaged
+          cd backend
+          cp host.json ../packaged/
+          cp package.json ../packaged/
+          cp -r src ../packaged/src
 
-      - name: Upload artifact                           # 👇 only correct structure upload
+      - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
           name: backend-app
@@ -44,17 +41,15 @@ jobs:
     runs-on: windows-latest
     needs: build
     steps:
-      - name: Download artifact
-        uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@v4
         with:
           name: backend-app
 
-      - name: Deploy to Azure Functions
-        uses: Azure/functions-action@v1
+      - uses: Azure/functions-action@v1
         with:
           app-name: 'todofxn'
           slot-name: 'Production'
-          package: '.'                                    # Deploy root extracted dir
+          package: 'packaged'
           publish-profile: ${{ secrets.AZUREAPPSERVICE_PUBLISHPROFILE_DC4222E86C2741F885E653464709A54C }}
-          enable-oryx-build: true                         # Build enable
-          scm-do-build-during-deployment: true            # Deploy-time build enable
+          enable-oryx-build: true
+          scm-do-build-during-deployment: true
